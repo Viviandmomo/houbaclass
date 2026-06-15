@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>厚爸小课堂</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Landing page — Apple minimal */
+      --lp-bg:        #ffffff;
+      --lp-ink:       #1a1a1a;
+      --lp-light:     #555555;
+      --lp-faint:     #999999;
+      --lp-rule:      #e0e0e0;
+
+      /* Content page — warm literary */
+      --cp-bg:        #f7f3ec;
+      --cp-card:      #ffffff;
+      --cp-ink:       #2c2416;
+      --cp-light:     #5a4a35;
+      --cp-faint:     #9a8a75;
+      --cp-rule:      #ddd5c8;
+      --a1:           #c4622d;   /* terracotta */
+      --a2:           #5b7a5e;   /* sage       */
+      --a3:           #2d4a6b;   /* ink blue   */
+      --a4:           #7a5c8a;   /* dusty plum */
+
+      --serif:  'Noto Serif SC', 'STSong', 'SimSun', Georgia, serif;
+      --sans:   'Noto Sans SC', 'PingFang SC', 'Helvetica Neue', sans-serif;
+      --page-w: 794px;
+    }
+
+    html { background: #ece8e0; }
+
+    body {
+      font-family: var(--sans);
+      max-width: var(--page-w);
+      margin: 0 auto;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* =============================================
+       LANDING PAGE
+    ============================================= */
+    #landing { background: var(--lp-bg); }
+
+    .lp-topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: saturate(180%) blur(12px);
+      -webkit-backdrop-filter: saturate(180%) blur(12px);
+      border-bottom: 1px solid var(--lp-rule);
+      padding: 0 52px;
+      height: 52px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .lp-brand    { font-family: var(--serif); font-size: 16px; font-weight: 500; color: var(--lp-ink); }
+    .lp-tagline  { font-size: 11px; color: var(--lp-faint); letter-spacing: 0.06em; }
+
+    .lp-hero {
+      padding: 64px 52px 52px;
+      border-bottom: 1px solid var(--lp-rule);
+    }
+    .lp-eyebrow  { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--lp-faint); margin-bottom: 18px; }
+    .lp-title    { font-family: var(--serif); font-size: 36px; font-weight: 500; color: var(--lp-ink); line-height: 1.3; margin-bottom: 14px; }
+    .lp-sub      { font-size: 14px; color: var(--lp-faint); font-weight: 300; line-height: 1.75; }
+
+    .lp-archive-head {
+      padding: 24px 52px 14px;
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--lp-faint);
+      border-bottom: 1px solid var(--lp-rule);
+    }
+
+    .lp-grid { display: grid; grid-template-columns: 1fr 1fr; }
+
+    .lp-card {
+      padding: 28px 52px;
+      border-right: 1px solid var(--lp-rule);
+      border-bottom: 1px solid var(--lp-rule);
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .lp-card:nth-child(even) { border-right: none; }
+    .lp-card:hover { background: #fafafa; }
+    .lp-card.latest::after {
+      content: '最新';
+      position: absolute; top: 20px; right: 20px;
+      font-size: 9px; letter-spacing: 0.08em;
+      background: var(--lp-ink); color: #fff;
+      padding: 2px 8px;
+    }
+    .lp-card-date  { font-size: 11px; color: var(--lp-faint); margin-bottom: 8px; letter-spacing: 0.04em; }
+    .lp-card-topic { font-family: var(--serif); font-size: 16px; font-weight: 500; color: var(--lp-ink); margin-bottom: 6px; line-height: 1.4; }
+    .lp-card-sub   { font-size: 12px; color: var(--lp-faint); line-height: 1.65; }
+    .lp-card-arrow { margin-top: 16px; font-size: 14px; color: #d0d0d0; }
+
+    .lp-footer {
+      padding: 28px 52px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid var(--lp-rule);
+    }
+    .lp-footer-txt { font-size: 11px; color: var(--lp-faint); }
+
+    /* =============================================
+       CONTENT PAGE
+    ============================================= */
+    #content-page { background: var(--cp-bg); min-height: 100vh; }
+
+    .cp-nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(247,243,236,0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--cp-rule);
+      padding: 0 52px; height: 48px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .cp-back {
+      font-size: 13px; color: var(--cp-light); cursor: pointer;
+      border: none; background: none; font-family: var(--sans);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .cp-back:hover { color: var(--cp-ink); }
+    .cp-nav-brand  { font-family: var(--serif); font-size: 13px; color: var(--cp-faint); }
+
+    .cp-header {
+      padding: 44px 52px 32px;
+      border-bottom: 1px solid var(--cp-rule);
+    }
+    .cp-date-label { font-size: 12px; color: var(--cp-faint); margin-bottom: 10px; letter-spacing: 0.04em; }
+    .cp-title      { font-family: var(--serif); font-size: 26px; font-weight: 600; color: var(--cp-ink); line-height: 1.35; margin-bottom: 10px; }
+    .cp-subtitle   { font-size: 13px; color: var(--cp-light); line-height: 1.75; font-family: var(--serif); font-style: italic; }
+
+    .cp-body { padding: 0 52px 56px; }
+
+    /* ---- Section wrapper ---- */
+    .dc-sec {
+      padding: 30px 0;
+      border-bottom: 1px solid var(--cp-rule);
+    }
+    .dc-sec:last-child { border-bottom: none; }
+
+    /* ---- Section title ---- */
+    .dc-h2 {
+      font-family: var(--serif); font-size: 17px; font-weight: 600;
+      color: var(--cp-ink); margin-bottom: 16px;
+      padding-left: 12px; border-left: 3px solid var(--a1);
+      line-height: 1.45;
+    }
+    .dc-h2.g  { border-left-color: var(--a2); }
+    .dc-h2.b  { border-left-color: var(--a3); }
+    .dc-h2.p  { border-left-color: var(--a4); }
+    .dc-h2.nb { border: none; padding-left: 0; }
+
+    /* ---- Subsection title ---- */
+    .dc-h3 {
+      font-family: var(--serif); font-size: 14px; font-weight: 500;
+      color: var(--cp-ink); margin: 18px 0 8px;
+    }
+    .dc-h3-note {
+      font-size: 12px; font-weight: 400; color: var(--cp-faint);
+      margin: 4px 0 8px; letter-spacing: 0.02em;
+    }
+
+    /* ---- Paragraph ---- */
+    .dc-p {
+      font-size: 14px; color: var(--cp-light); line-height: 2;
+      margin-bottom: 10px;
+    }
+    .dc-p:last-child { margin-bottom: 0; }
+
+    /* ---- List ---- */
+    .dc-ul { list-style: none; padding: 0; margin: 6px 0 12px; }
+    .dc-ul li {
+      font-size: 14px; color: var(--cp-light); line-height: 1.9;
+      padding: 3px 0 3px 18px; position: relative;
+    }
+    .dc-ul li::before { content: '—'; position: absolute; left: 0; color: var(--cp-faint); }
+
+    /* ---- Quote / Highlight box ---- */
+    .dc-quote {
+      background: var(--cp-card); border-left: 3px solid var(--a1);
+      padding: 14px 18px; margin: 14px 0;
+      font-size: 14px; color: var(--cp-ink); line-height: 1.9;
+      font-family: var(--serif); font-style: italic;
+    }
+    .dc-quote.g { border-left-color: var(--a2); }
+    .dc-quote.b { border-left-color: var(--a3); }
+
+    /* ---- People grid ---- */
+    .dc-people { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+    .dc-person {
+      background: var(--cp-card); padding: 18px 20px;
+      border: 1px solid var(--cp-rule);
+    }
+    .dc-person-name { font-family: var(--serif); font-size: 15px; font-weight: 600; color: var(--cp-ink); margin-bottom: 2px; }
+    .dc-person-role { font-size: 11px; color: var(--cp-faint); margin-bottom: 10px; letter-spacing: 0.04em; }
+    .dc-person p    { font-size: 13px; color: var(--cp-light); line-height: 1.85; }
+
+    /* ---- Conclusion dark box ---- */
+    .dc-conc {
+      background: var(--cp-ink); color: #f0ebe0;
+      padding: 20px 24px; margin-top: 18px;
+      font-family: var(--serif); font-size: 14px; line-height: 1.95;
+    }
+
+    /* ---- Seasonal card ---- */
+    .dc-seasonal {
+      background: var(--cp-card); border: 1px solid var(--cp-rule);
+      padding: 22px 26px;
+    }
+    .dc-seasonal-tag {
+      font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--a2); margin-bottom: 10px; font-weight: 500;
+    }
+
+    /* ---- Writing methods grid ---- */
+    .dc-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0; }
+    .dc-method {
+      background: var(--cp-card); padding: 20px;
+      border: 1px solid var(--cp-rule);
+    }
+    .dc-method-title {
+      font-family: var(--serif); font-size: 14px; font-weight: 600;
+      color: var(--cp-ink); margin-bottom: 10px;
+      padding-bottom: 8px; border-bottom: 1px solid var(--cp-rule);
+    }
+    .dc-method p { font-size: 13px; color: var(--cp-light); line-height: 1.9; }
+
+    /* ---- Poem group ---- */
+    .dc-poem-group { margin: 18px 0; }
+    .dc-poem-group-label {
+      font-size: 11px; letter-spacing: 0.08em; color: var(--cp-faint);
+      text-align: center; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .dc-poem-group-label::before,
+    .dc-poem-group-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--cp-rule);
+    }
+    .dc-poem-items { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .dc-poem {
+      background: var(--cp-card); padding: 20px 22px;
+      border: 1px solid var(--cp-rule);
+    }
+    .dc-poem.full { grid-column: 1 / -1; }
+    .dc-poem-title  { font-family: var(--serif); font-size: 14px; font-weight: 600; color: var(--cp-ink); margin-bottom: 2px; }
+    .dc-poem-author { font-size: 11px; color: var(--cp-faint); margin-bottom: 14px; }
+    .dc-poem-body   { font-family: var(--serif); font-size: 14px; color: var(--cp-ink); line-height: 2.2; margin-bottom: 12px; }
+    .dc-poem-note   { font-size: 12px; color: var(--cp-light); line-height: 1.8; border-top: 1px solid var(--cp-rule); padding-top: 10px; }
+
+    /* ============================
+       PRINT
+    ============================ */
+    @media print {
+      html, body { background: white; }
+      #landing { display: none !important; }
+      #content-page { display: block !important; }
+      .cp-nav { display: none !important; }
+      .cp-header { padding: 28px 48px 20px; }
+      .cp-body { padding: 0 48px 32px; }
+      .dc-sec       { page-break-inside: avoid; }
+      .dc-people    { page-break-inside: avoid; }
+      .dc-methods   { page-break-inside: avoid; }
+      .dc-poem-items{ page-break-inside: avoid; }
+    }
+
+    /* ============================
+       RESPONSIVE
+    ============================ */
+    @media screen and (max-width: 820px) {
+      .lp-topbar, .lp-hero, .lp-archive-head, .lp-footer,
+      .lp-card, .cp-nav, .cp-header, .cp-body { padding-left: 20px; padding-right: 20px; }
+      .lp-grid    { grid-template-columns: 1fr; }
+      .lp-card    { border-right: none; }
+      .dc-people, .dc-methods, .dc-poem-items { grid-template-columns: 1fr; }
+      .dc-poem.full { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     LANDING PAGE
+============================================================ -->
+<div id="landing">
+  <header class="lp-topbar">
+    <div class="lp-brand">厚爸小课堂</div>
+    <div class="lp-tagline">语文 · 历史 · 人文素养</div>
+  </header>
+
+  <section class="lp-hero">
+    <div class="lp-eyebrow">厚爸小课堂</div>
+    <h1 class="lp-title">每日课堂精华<br>读懂历史与语文之美</h1>
+    <p class="lp-sub">以故事为线索，读懂真实的历史关键时刻与语文的美。<br>每日更新，积累成就未来。</p>
+  </section>
+
+  <div class="lp-archive-head">课堂存档</div>
+  <div class="lp-grid" id="lp-grid"></div>
+
+  <footer class="lp-footer">
+    <span class="lp-footer-txt">厚爸小课堂</span>
+    <span class="lp-footer-txt">每日更新</span>
+  </footer>
+</div>
+
+<!-- ============================================================
+     CONTENT PAGE
+============================================================ -->
+<div id="content-page" style="display:none">
+  <nav class="cp-nav">
+    <button class="cp-back" onclick="showLanding()">← 返回目录</button>
+    <div class="cp-nav-brand">厚爸小课堂</div>
+  </nav>
+
+  <div class="cp-header">
+    <div class="cp-date-label" id="cp-date-label"></div>
+    <h1 class="cp-title" id="cp-title"></h1>
+    <p class="cp-subtitle" id="cp-subtitle"></p>
+  </div>
+
+  <div class="cp-body">
+    <div id="cp-body-content"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// 📝 每日内容数据
+//
+// 使用说明：
+//   每天在此 CONTENT 对象里添加一个新条目。
+//   key 格式：  "YYYY-MM-DD"
+//   topic:      讨论起点 / 当日核心问题（首页卡片显示）
+//   subtitle:   副标题（首页卡片 + 内容页显示）
+//   body:       内容 HTML（使用下方 CSS 类，无需改动样式）
+//
+// 可用 CSS 类速查：
+//   .dc-sec          包裹一个内容区块（自动加分隔线）
+//   .dc-h2           区块标题（红色左边框）
+//   .dc-h2.g         绿色左边框
+//   .dc-h2.b         蓝色左边框
+//   .dc-h2.p         紫色左边框
+//   .dc-h3           小标题
+//   .dc-h3-note      小标题下方灰色说明文字
+//   .dc-p            正文段落
+//   .dc-ul / li      列表（自动 — 符号）
+//   .dc-quote        引用框（白底红左边框）
+//   .dc-quote.g      绿色左边框版引用框
+//   .dc-people       人物卡片网格容器
+//   .dc-person       单个人物卡片
+//   .dc-person-name  人名
+//   .dc-person-role  人物简介小标签
+//   .dc-conc         深色总结框
+//   .dc-seasonal     节气卡片
+//   .dc-seasonal-tag 节气小标签
+//   .dc-methods      作文方法网格容器
+//   .dc-method       单个写作方法卡片
+//   .dc-method-title 方法名称
+//   .dc-poem-group   诗词分组容器
+//   .dc-poem-group-label 分组标题（带横线）
+//   .dc-poem-items   诗词网格容器（两列）
+//   .dc-poem         单首诗词卡片
+//   .dc-poem.full    通栏诗词卡片（占满两列）
+//   .dc-poem-title   诗词标题
+//   .dc-poem-author  作者
+//   .dc-poem-body    诗词正文
+//   .dc-poem-note    注释 / 赏析
+// ============================================================
+const CONTENT = {
+
+// ─────────────────────────────────────────────────────────────
+// 6月5日
+// ─────────────────────────────────────────────────────────────
+"2026-06-05": {
+  topic:    "古代人有没有退休和退休金？",
+  subtitle: "从致仕、科举与仕途，到壮志未酬的无奈和对高考的祝福",
+  body: `
+    <div class="dc-sec">
+      <div class="dc-h2">讨论起点：古代人有没有退休和退休金？</div>
+      <p class="dc-p">古代官员年老离职，常称「致仕」，本义是交还官职。只有高级公务员（如县尉起步的官员）才有退休待遇，普通人没有。而能不能顺利退休、退休后待遇如何，往往与官员品级、身体状况、政治环境和皇帝态度有关。</p>
+
+      <div class="dc-h3">核心理念与起源</div>
+      <p class="dc-p">致仕是中国古代官员退休制度的专用术语，意为「还禄位于君」，即官员因年老或疾病将职权交还君主，退职养老。其核心思想源于西周「家天下」观念，视官职禄位为君主所赐，年老需归还。</p>
+
+      <div class="dc-h3">历代执行差异</div>
+      <div class="dc-h3-note">年龄规定</div>
+      <ul class="dc-ul">
+        <li>主流标准：多数朝代（汉、唐、宋、明）以 70 岁为法定线</li>
+        <li>严格执行：宋代对恋栈者会强制勒令退休</li>
+        <li>提前与延迟：明朝曾一度降至 60 岁；清代则趋于灵活，以 60 岁为标准并结合考核。身体状况不佳者可提前「病退」，有功或帝王挽留者则可延迟</li>
+      </ul>
+      <div class="dc-h3-note">经济待遇</div>
+      <ul class="dc-ul">
+        <li>汉：高官（二千石以上）可获原俸 1/3，低官一般无俸</li>
+        <li>唐：前期较优厚（五品以上半禄，有功全禄，有永业田），中后期遭破坏</li>
+        <li>宋：待遇最优厚（升秩、加恩、半俸），但「冗官」问题严重，官员多不愿主动致仕</li>
+        <li>明：明初待遇低甚至无俸，后改为升品级或发米粮</li>
+        <li>清：清代以半俸为常，有功可享全俸</li>
+      </ul>
+
+      <div class="dc-h3">程序与归属</div>
+      <ul class="dc-ul">
+        <li>程序上通常需官员主动上表「乞骸骨」（请求退休），皇帝批准后举行仪式</li>
+        <li>退休后官员大多回乡，凭借身份成为「乡绅」，主持教化、编修方志，实现「在朝为官、回乡为绅」的循环</li>
+      </ul>
+      <p class="dc-p">这也解释了为什么古代读书人如此重视入仕。考中之后，不只是得到一份工作，更意味着身份和待遇上的改变——从一介布衣跃升为「士绅」，享有见官不跪、免服徭役、减免赋税等法定特权。</p>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 g">科举：进入国家官僚体系的极窄通道</div>
+      <p class="dc-p">唐朝考公比现在考清华北大难太多——全国每年只招 20 个进士，其中首都长安所在的京畿道独占 10 个，剩下全国九个道加起来分 10 个。基本只有各省的第一名水平，才有可能考上。</p>
+      <p class="dc-p">考上了进士之后，就等着国家分配工作，但有时候需要等很久。例如孟郊，在「一日看尽长安花」之后等了五六年，国家才给了他一个小县官。</p>
+      <p class="dc-p">比进士高一级的，是进士里的前三名，是进士及第。但进士人数太少，不利于社会稳定，就设计了「同进士出身」。</p>
+      <ul class="dc-ul">
+        <li>进士及第（前三名，即状元、榜眼、探花）</li>
+        <li>进士出身（二甲，正牌进士）</li>
+        <li>同进士出身（三甲，相当于「准进士」）</li>
+      </ul>
+      <div class="dc-quote g">「同进士出身」在进士圈里位于鄙视链底端，但也已具备了做官的正式资格，远超举人。</div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 b">读书人生存的现实压力</div>
+      <p class="dc-p">古代读书人也要吃饭，要当官。与谁交往、能否获得支持，常常影响一个人的生活处境。</p>
+      <div class="dc-people">
+        <div class="dc-person">
+          <div class="dc-person-name">杜甫</div>
+          <div class="dc-person-role">故人薪米与权贵庇护</div>
+          <p>杜甫能于浣花溪畔暂避乱世风雨，全靠严武（成都尹）按月供俸、高适（蜀州刺史）遣使赠酒、裴冕助选址筑堂，以及邻里分粥的民间温情。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">李白</div>
+          <div class="dc-person-role">豪迈诗风与坎坷现实</div>
+          <p>李白因商籍无缘科举，投了一辈子简历（数十年干谒）才换来无实权的翰林待诏。不久被玄宗「赐金放还」，之后误入永王幕府险丢性命，晚年还遭遇流放夜郎的命运。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">王维</div>
+          <div class="dc-person-role">人格魅力来自有始有终</div>
+          <p>他只给张九龄一个人投过一次简历。在张九龄被贬之后，王维仍写信声援安慰。这种有始有终的情义，使王维更具人格魅力。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">阮籍</div>
+          <div class="dc-person-role">青白眼和穷途之哭</div>
+          <p>阮籍嫌嵇喜俗气对他翻白眼（青白眼），却对嵇康青眼有加（青睐）；他在乱世中仕途不顺，也会驾车出去兜风，到了没路的地方哭一场。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">高适</div>
+          <div class="dc-person-role">跟对大哥，逆天改命</div>
+          <p>高适是唐代诗人中唯一封侯的人（官至渤海县侯）。他的成功，关键是站队精准，选对了平台（哥舒翰幕府）和赛道（军功），实现了人生的阶级跨越。</p>
+        </div>
+      </div>
+      <div class="dc-conc">除了极少数的幸运儿，大部分人想做的事做不成；做不成，也想做；想做，就还得硬挺着做。这种「明知不可为而为之」的状态，不只属于古人，也属于在现实中挣扎而不肯放弃的普通人。——所谓壮志未酬，并不只是英雄的遗憾，它也可能是每一个普通人在现实中仍然不愿放弃的坚持。</div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-seasonal">
+        <div class="dc-seasonal-tag">节气 · 芒种</div>
+        <div class="dc-h2 g nb">芒种：收割，也是播种</div>
+        <p class="dc-p">今天（2026 年 6 月 5 日）是芒种。这个「芒」字，本义与麦类作物穗上的尖芒有关。「锋芒」和「如芒在背」，取这种尖锐之意。</p>
+        <p class="dc-p">芒种时节，一面是夏粮收割，一面是秋粮播种。结束与开始同时发生，收获与新的辛劳也同时发生。对于高考也是如此——它是一个阶段的结束，也是另一个阶段的开始。</p>
+        <p class="dc-p" style="color:var(--a2);font-family:var(--serif);font-style:italic">愿高考的孩子都锋芒毕露，收获满满，开启一个可期待的全新未来。</p>
+      </div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 p">作文方法</div>
+      <div class="dc-methods">
+        <div class="dc-method">
+          <div class="dc-method-title">角度转换</div>
+          <p>孔雀开屏，从正面看是华美，从背面看则未必如此。人物评价也是一样：李白的锋芒、刘禹锡的犀利、阮籍的狂放，从不同角度看，也会呈现不同含义。一个人的行为，从表面看可能是荒唐；换一个角度看，可能是理想无路可走之后的悲凉。</p>
+        </div>
+        <div class="dc-method">
+          <div class="dc-method-title">矛盾统一</div>
+          <p>芒种既是收割又是播种，高考是一个阶段的结束，也是另一个阶段的开始。把矛盾双方放在一起，文章就有了思想层次。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 b">拓展阅读</div>
+
+      <div class="dc-poem-group">
+        <div class="dc-poem-group-label">诗风豪迈，现实坎坷 · 年华已老，壮志未酬</div>
+        <div class="dc-poem-items">
+          <div class="dc-poem">
+            <div class="dc-poem-title">《上李邕》</div>
+            <div class="dc-poem-author">唐 · 李白</div>
+            <div class="dc-poem-body">大鹏一日同风起，扶摇直上九万里。<br>假令风歇时下来，犹能簸却沧溟水。<br>世人见我恒殊调，闻余大言皆冷笑。<br>宣父犹能畏后生，丈夫未可轻年少。</div>
+          </div>
+          <div class="dc-poem">
+            <div class="dc-poem-title">《贺新郎·甚矣吾衰矣》重点段</div>
+            <div class="dc-poem-author">宋 · 辛弃疾</div>
+            <div class="dc-poem-body">甚矣吾衰矣。<br>怅平生、交游零落，只今余几！<br>白发空垂三千丈，一笑人间万事。<br>问何物、能令公喜？<br>我见青山多妩媚，料青山见我应如是。<br>情与貌，略相似。</div>
+            <div class="dc-poem-note">年轻时读辛弃疾，容易只读到豪放。年岁渐长，再看「交游零落」「白发空垂」，会读到失落与坚忍。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dc-poem-group">
+        <div class="dc-poem-group-label">故乡犹在，故我已非 · 老当益壮，穷且益坚</div>
+        <div class="dc-poem-items">
+          <div class="dc-poem">
+            <div class="dc-poem-title">《回乡偶书二首·其一》</div>
+            <div class="dc-poem-author">唐 · 贺知章</div>
+            <div class="dc-poem-body">少小离家老大回，乡音无改鬓毛衰。<br>儿童相见不相识，笑问客从何处来。</div>
+          </div>
+          <div class="dc-poem">
+            <div class="dc-poem-title">《滕王阁序》节选</div>
+            <div class="dc-poem-author">唐 · 王勃</div>
+            <div class="dc-poem-body">老当益壮，宁移白首之心？<br>穷且益坚，不坠青云之志。<br>酌贪泉而觉爽，处涸辙以犹欢。<br>东隅已逝，桑榆非晚。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+},
+
+// ─────────────────────────────────────────────────────────────
+// 模板：复制以下内容，修改日期和内容后粘贴到上方
+// ─────────────────────────────────────────────────────────────
+// "2026-06-06": {
+//   topic:    "今日讨论主题",
+//   subtitle: "今日副标题描述",
+//   body: `
+//     <div class="dc-sec">
+//       <div class="dc-h2">讨论起点：...</div>
+//       <p class="dc-p">...</p>
+//     </div>
+//     <div class="dc-sec">
+//       <div class="dc-h2 g">第二节标题</div>
+//       <p class="dc-p">...</p>
+//     </div>
+//     <div class="dc-sec">
+//       <div class="dc-h2 p">作文方法</div>
+//       <div class="dc-methods">
+//         <div class="dc-method"><div class="dc-method-title">方法名</div><p>说明...</p></div>
+//         <div class="dc-method"><div class="dc-method-title">方法名</div><p>说明...</p></div>
+//       </div>
+//     </div>
+//     <div class="dc-sec">
+//       <div class="dc-h2 b">拓展阅读</div>
+//       <div class="dc-poem-group">
+//         <div class="dc-poem-group-label">分组标题</div>
+//         <div class="dc-poem-items">
+//           <div class="dc-poem">
+//             <div class="dc-poem-title">《诗题》</div>
+//             <div class="dc-poem-author">朝代 · 作者</div>
+//             <div class="dc-poem-body">诗句<br>诗句</div>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   `
+// },
+
+}; // ← CONTENT 对象结束
+
+// ============================================================
+// 路由与渲染（不需要修改）
+// ============================================================
+function fmtDate(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  const date = new Date(key + 'T00:00:00');
+  const w = ['日','一','二','三','四','五','六'][date.getDay()];
+  return `${y} 年 ${m} 月 ${d} 日  星期${w}`;
+}
+
+function fmtShort(key) {
+  const [, m, d] = key.split('-').map(Number);
+  return `${m} 月 ${d} 日`;
+}
+
+function showContent(key) {
+  const data = CONTENT[key];
+  if (!data) return;
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('content-page').style.display = 'block';
+  document.getElementById('cp-date-label').textContent = fmtDate(key);
+  document.getElementById('cp-title').textContent = data.topic;
+  document.getElementById('cp-subtitle').textContent = data.subtitle;
+  document.getElementById('cp-body-content').innerHTML = data.body;
+  history.pushState({ date: key }, '', '?date=' + key);
+  window.scrollTo(0, 0);
+}
+
+function showLanding() {
+  document.getElementById('content-page').style.display = 'none';
+  document.getElementById('landing').style.display = 'block';
+  history.pushState({}, '', location.pathname);
+  window.scrollTo(0, 0);
+}
+
+function buildLanding() {
+  const keys = Object.keys(CONTENT).sort().reverse();
+  document.getElementById('lp-grid').innerHTML = keys.map((k, i) => `
+    <div class="lp-card${i === 0 ? ' latest' : ''}" onclick="showContent('${k}')">
+      <div class="lp-card-date">${fmtShort(k)}</div>
+      <div class="lp-card-topic">${CONTENT[k].topic}</div>
+      <div class="lp-card-sub">${CONTENT[k].subtitle}</div>
+      <div class="lp-card-arrow">→</div>
+    </div>
+  `).join('');
+}
+
+window.addEventListener('popstate', e => {
+  e.state && e.state.date ? showContent(e.state.date) : showLanding();
+});
+
+buildLanding();
+const p = new URLSearchParams(location.search).get('date');
+if (p && CONTENT[p]) showContent(p);
+</script>
+</body>
+</html>
