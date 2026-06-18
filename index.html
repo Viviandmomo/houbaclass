@@ -256,6 +256,77 @@
     .dc-poem-note   { font-size: 12px; color: var(--cp-light); line-height: 1.8; border-top: 1px solid var(--cp-rule); padding-top: 10px; }
 
     /* ============================
+       READING INDEX TABS
+    ============================ */
+    .lp-tabs {
+      padding: 0 52px;
+      border-bottom: 1px solid var(--lp-rule);
+      display: flex; gap: 0;
+    }
+    .lp-tab {
+      padding: 14px 0; margin-right: 28px;
+      background: none; border: none;
+      border-bottom: 2px solid transparent;
+      font-size: 12px; letter-spacing: 0.06em;
+      cursor: pointer; color: var(--lp-faint);
+      font-family: var(--sans);
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .lp-tab:hover { color: var(--lp-ink); }
+    .lp-tab.active { color: var(--lp-ink); border-bottom-color: var(--lp-ink); font-weight: 500; }
+
+    .lp-readings-group { border-bottom: 1px solid var(--lp-rule); }
+    .lp-readings-group-label {
+      padding: 16px 52px 10px;
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--lp-faint);
+    }
+    .lp-reading-item {
+      padding: 13px 52px;
+      border-top: 1px solid var(--lp-rule);
+      display: flex; align-items: baseline;
+      justify-content: space-between;
+      cursor: pointer; transition: background 0.12s;
+    }
+    .lp-reading-item:hover { background: #fafafa; }
+    .lp-reading-left { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .lp-reading-title { font-family: var(--serif); font-size: 15px; color: var(--lp-ink); }
+    .lp-reading-author { font-size: 12px; color: var(--lp-faint); }
+    .lp-reading-date { font-size: 11px; color: var(--lp-faint); white-space: nowrap; padding-left: 10px; }
+
+    .reading-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .reading-modal-card {
+      background: #fff; max-width: 500px; width: 100%;
+      padding: 36px 36px 28px;
+      position: relative; max-height: 85vh; overflow-y: auto;
+    }
+    .reading-modal-close {
+      position: absolute; top: 14px; right: 16px;
+      background: none; border: none; font-size: 20px;
+      cursor: pointer; color: var(--lp-faint); line-height: 1;
+    }
+    .reading-modal-close:hover { color: var(--lp-ink); }
+    .reading-modal-eyebrow { font-size: 11px; color: var(--lp-faint); letter-spacing: 0.06em; margin-bottom: 4px; }
+    .reading-modal-title  { font-family: var(--serif); font-size: 22px; font-weight: 600; color: var(--lp-ink); margin-bottom: 2px; line-height: 1.4; }
+    .reading-modal-author { font-size: 13px; color: var(--lp-faint); margin-bottom: 18px; }
+    .reading-modal-lines  { font-family: var(--serif); font-size: 15px; color: var(--lp-ink); line-height: 2.3; margin-bottom: 16px; white-space: pre-line; }
+    .reading-modal-note   { font-size: 13px; color: #5a4a35; line-height: 1.85; border-top: 1px solid #e8e4dc; padding-top: 14px; margin-bottom: 20px; }
+    .reading-modal-tags   { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+    .reading-modal-tag    { font-size: 10px; padding: 3px 8px; background: #f2f0ec; color: #666; letter-spacing: 0.03em; }
+    .reading-modal-goto   {
+      background: var(--lp-ink); color: #fff; border: none;
+      font-family: var(--sans); font-size: 12px; letter-spacing: 0.04em;
+      padding: 11px 20px; cursor: pointer; width: 100%; text-align: left;
+    }
+    .reading-modal-goto:hover { opacity: 0.85; }
+
+    /* ============================
        PRINT
     ============================ */
     @media print {
@@ -301,13 +372,27 @@
     <p class="lp-sub">以故事为线索，读懂真实的历史关键时刻与语文的美。<br>每日更新，积累成就未来。</p>
   </section>
 
-  <div class="lp-archive-head">课堂存档</div>
+  <div class="lp-tabs">
+    <button class="lp-tab active" data-tab="date" onclick="showTab('date')">按日期</button>
+    <button class="lp-tab" data-tab="theme" onclick="showTab('theme')">按主题</button>
+    <button class="lp-tab" data-tab="author" onclick="showTab('author')">按作者</button>
+  </div>
   <div class="lp-grid" id="lp-grid"></div>
+  <div id="lp-readings" style="display:none"></div>
 
   <footer class="lp-footer">
     <span class="lp-footer-txt">厚爸小课堂</span>
     <span class="lp-footer-txt">每日更新</span>
   </footer>
+</div>
+
+<!-- Reading modal -->
+<div class="reading-modal-overlay" id="reading-modal" style="display:none" onclick="closeReadingModal()">
+  <div class="reading-modal-card" onclick="event.stopPropagation()">
+    <button class="reading-modal-close" onclick="closeReadingModal()">&#x2715;</button>
+    <div id="reading-modal-content"></div>
+    <button class="reading-modal-goto" id="reading-modal-goto"></button>
+  </div>
 </div>
 
 <!-- ============================================================
@@ -519,7 +604,782 @@ const CONTENT = {
         </div>
       </div>
     </div>
-  `
+  `,
+  readings: [
+    { title: "《上李邕》", author: "李白", dynasty: "唐", themes: ["励志与成长"],
+      lines: "大鹏一日同风起，扶摇直上九万里。\n假令风歇时下来，犹能簸却沧溟水。\n世人见我恒殊调，闻余大言皆冷笑。\n宣父犹能畏后生，丈夫未可轻年少。",
+      note: "李白年轻时写，充满少年意气。「宣父犹能畏后生」——孔子尚且敬重后辈，别小看年轻人。" },
+    { title: "《贺新郎·甚矣吾衰矣》", author: "辛弃疾", dynasty: "宋", themes: ["仕途与命运", "哲思人生"],
+      lines: "甚矣吾衰矣。\n怅平生、交游零落，只今余几！\n白发空垂三千丈，一笑人间万事。\n问何物、能令公喜？\n我见青山多妩媚，料青山见我应如是。\n情与貌，略相似。",
+      note: "年轻时读辛弃疾，容易只读到豪放。年岁渐长，再看「交游零落」「白发空垂」，会读到失落与坚忍。" },
+    { title: "《回乡偶书二首·其一》", author: "贺知章", dynasty: "唐", themes: ["哲思人生"],
+      lines: "少小离家老大回，乡音无改鬓毛衰。\n儿童相见不相识，笑问客从何处来。",
+      note: "" },
+    { title: "《滕王阁序》节选", author: "王勃", dynasty: "唐", themes: ["励志与成长", "家国情怀"],
+      lines: "老当益壮，宁移白首之心？\n穷且益坚，不坠青云之志。\n酌贪泉而觉爽，处涸辙以犹欢。\n东隅已逝，桑榆非晚。",
+      note: "" }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────
+// 5月26日
+// ─────────────────────────────────────────────────────────────
+"2026-05-26": {
+  topic:    "意象是写作的核心入口",
+  subtitle: "从草的意象到送别诗，从更鼓计时到改过自新的人生故事",
+  body: `
+    <div class="dc-sec">
+      <div class="dc-h2">江左、江东与古地图方向</div>
+      <p class="dc-p">古人坐北朝南看，古地图与现在相反：江东为左，江西为右。所以「江左」就是「江东」——站在中原南望，左手边长江那段，就是江东。</p>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 g">意象：写作的核心入口</div>
+      <p class="dc-p">意象，就是通过一个具体事物，表达你想表达的事情；从这个事物里，表达你的感情和想法。不同的想法，要通过不同的意象表达：</p>
+      <ul class="dc-ul">
+        <li>写思乡 → 月亮</li>
+        <li>写送别 → 柳树，或者草</li>
+        <li>写雨 → 带出江南、雨夜和情绪</li>
+      </ul>
+
+      <div class="dc-h3">为什么写送别可以写草？</div>
+      <p class="dc-p">春草无边，恰如离愁绵长；枯荣反复且有规律，容易引发情思；古时送别长亭更短亭，草是最常见的景物。柳树这个意象用烂了，可以换草。</p>
+      <div class="dc-quote g">离恨恰如春草，更行更远还生。</div>
+
+      <div class="dc-h3">白居易《赋得古原草送别》</div>
+      <p class="dc-p">白居易 16 岁时写这首诗，是一篇考场作文。「赋得」就是「命题作文」的意思，题目的意思是：作文题，古原草送别（注意：不是「古草原送别」，重点意象是草）。</p>
+      <p class="dc-p">写事情，不能上来就写，要先「起兴」——借眼前景物开头，烘托气氛，引出正题。这跟现在的作文写法是一样的。</p>
+      <div class="dc-quote">离离原上草，一岁一枯荣。<br>野火烧不尽，春风吹又生。<br>远芳侵古道，晴翠接荒城。<br>又送王孙去，萋萋满别情。</div>
+      <p class="dc-p">首联写景、点题，点出意象的核心特点；尾联借草的绵延写离别之情，浑然天成。</p>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 b">「更」的读音与夜间计时制度</div>
+      <p class="dc-p">「更」在夜间计时、打更、更夫这些词里读 <strong>gēng</strong>（一声）；表示「更加」时读 <strong>gèng</strong>（四声）。</p>
+      <p class="dc-p">古代夜间分更计时，一晚分 5 更，每更约 2 小时：</p>
+      <ul class="dc-ul">
+        <li>一更（19—21点，戌时）</li>
+        <li>二更（21—23点，亥时）</li>
+        <li>三更（23—1点，子时）——「三更半夜」由此而来</li>
+        <li>四更（1—3点，丑时）</li>
+        <li>五更（3—5点，寅时）——过了五更，官员须起床上朝</li>
+      </ul>
+      <p class="dc-p">卯时（5—7点）点名上朝，称「点卯」。后引申出「应付差事、走过场」的意思。打更的人不能让一个固定的更夫熬到天亮，要轮换，所以「更」引申出「更换、更替」，再引申出「又、再」的意思。</p>
+      <div class="dc-quote b">「长亭更短亭」= 长亭又短亭，一个接着一个，路途遥远。</div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 p">作文素材：改过自新，永不嫌迟</div>
+      <div class="dc-people">
+        <div class="dc-person">
+          <div class="dc-person-name">周处</div>
+          <div class="dc-person-role">「周处除三害」的主角</div>
+          <p>周处年少为害乡里，后痛改前非，拜名师陆云、陆机为师（即《滕王阁序》「请洒潘江，各倾陆海云尔」之「陆」），最终走出全新人生。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">韦应物</div>
+          <div class="dc-person-role">从武职到诗人</div>
+          <p>韦应物原是唐玄宗身边的侍卫，后转向读书写诗，写出「野渡无人舟自横」，成为优秀诗人。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">苏洵</div>
+          <div class="dc-person-role">「二十七始发愤」</div>
+          <p>苏洵二十七岁才开始发愤读书，最终成为唐宋八大家之一，与儿子苏轼、苏辙并称「三苏」。</p>
+        </div>
+      </div>
+      <div class="dc-conc">这些人的故事都指向同一个道理：努力从不嫌晚。只要开始，人生就还有可能。写「只要努力就不晚」类的作文，周处、韦应物、苏洵都是极好的素材。</div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 p">作文方法</div>
+      <div class="dc-methods">
+        <div class="dc-method">
+          <div class="dc-method-title">起兴手法</div>
+          <p>借眼前景物开头，烘托气氛，引出正题。如白居易写草，先写「离离原上草，一岁一枯荣」，再引出「又送王孙去，萋萋满别情」。写作文不要上来就直接说主题，先用景物或意象暖场。</p>
+        </div>
+        <div class="dc-method">
+          <div class="dc-method-title">意象运用</div>
+          <p>不同情感要找准对应意象：思乡用月亮，送别用柳或草，雨带出江南与情绪。考场上用熟悉意象时，也可以换一个同类但不那么滥用的意象，让文章更有新意。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 b">拓展阅读</div>
+      <div class="dc-poem-group">
+        <div class="dc-poem-group-label">送别与离愁</div>
+        <div class="dc-poem-items">
+          <div class="dc-poem">
+            <div class="dc-poem-title">《菩萨蛮·平林漠漠烟如织》</div>
+            <div class="dc-poem-author">唐 · 李白（存疑）</div>
+            <div class="dc-poem-body">平林漠漠烟如织，寒山一带伤心碧。<br>暝色入高楼，有人楼上愁。<br>玉阶空伫立，宿鸟归飞急。<br>何处是归程？长亭更短亭。</div>
+            <div class="dc-poem-note">「长亭更短亭」——长亭又短亭，一个接着一个，归程遥遥无期。「更」读 gēng，是「又、再」之意。</div>
+          </div>
+          <div class="dc-poem">
+            <div class="dc-poem-title">《赋得古原草送别》</div>
+            <div class="dc-poem-author">唐 · 白居易（16岁考场作文）</div>
+            <div class="dc-poem-body">离离原上草，一岁一枯荣。<br>野火烧不尽，春风吹又生。<br>远芳侵古道，晴翠接荒城。<br>又送王孙去，萋萋满别情。</div>
+            <div class="dc-poem-note">以草起兴，写出离别的绵长与生命的韧性。「野火烧不尽，春风吹又生」也常作励志素材。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  readings: [
+    { title: "《菩萨蛮·平林漠漠烟如织》", author: "李白（存疑）", dynasty: "唐", themes: ["送别与离愁"],
+      lines: "平林漠漠烟如织，寒山一带伤心碧。\n暝色入高楼，有人楼上愁。\n玉阶空伫立，宿鸟归飞急。\n何处是归程？长亭更短亭。",
+      note: "「长亭更短亭」——长亭又短亭，一个接着一个，归程遥遥无期。「更」读 gēng，是「又、再」之意。" },
+    { title: "《赋得古原草送别》", author: "白居易", dynasty: "唐", themes: ["送别与离愁", "励志与成长"],
+      lines: "离离原上草，一岁一枯荣。\n野火烧不尽，春风吹又生。\n远芳侵古道，晴翠接荒城。\n又送王孙去，萋萋满别情。",
+      note: "以草起兴，写出离别的绵长与生命的韧性。「野火烧不尽，春风吹又生」也常作励志素材。" }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────
+// 6月4日
+// ─────────────────────────────────────────────────────────────
+"2026-06-04": {
+  topic:    "白居易的「反内卷」方案与罗隐的命运感",
+  subtitle: "从中隐智慧到晚唐诗人，看文章的思想深度",
+  body: `
+    <div class="dc-sec">
+      <div class="dc-h2">讨论起点：白居易的"反内卷"方案</div>
+      <p class="dc-p">在无法彻底逃离的现实生活中，主动开辟一个属于自己的、充满热爱的小世界，以此完成精神上的平衡与充电。这对于今天的普通人来说，依然是一种极具烟火气且可行的智慧。</p>
+      <div class="dc-people">
+        <div class="dc-person">
+          <div class="dc-person-name">拒绝极端，选择「中隐」</div>
+          <div class="dc-person-role">白居易的哲学</div>
+          <p>白居易认为大隐于朝市太喧嚣，小隐于山林太冷落。他主张「不如家池上」，在城市中营造一处不大不小的安逸空间。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">打造「壶中天地」</div>
+          <div class="dc-person-role">精神的驿站</div>
+          <p>这个空间不必奢华，关键是能安放自己的爱好与回忆。拥有一池水，几卷书，便拥有了整个世界。这不是逃避现实的终点，而是短暂休整的驿站。</p>
+        </div>
+      </div>
+      <p class="dc-p">同样面对科考、仕途和时代压力，有人像白居易那样找到平衡，也有人像罗隐那样长期被命运卡住。前者写出安顿，后者写出不平。</p>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 g">科考：古代读书人的内卷</div>
+      <p class="dc-p">唐代科举并不比现代考试轻松——毕竟是包工作包分配的。唐代每年参加进士考试的两千余人，录取不过二三十人。</p>
+      <ul class="dc-ul">
+        <li>韩愈四试才中</li>
+        <li>罗隐十试不第</li>
+        <li>蒲松龄考了一辈子没中举人</li>
+        <li>孟郊考了大半辈子，终于登第后，写下「春风得意马蹄疾，一日看尽长安花」</li>
+        <li>白居易年少登第，「慈恩塔下题名处，十七人中最少年」，是科考顺利的代表</li>
+      </ul>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 b">罗隐：被小看了的大诗人</div>
+      <p class="dc-p">罗隐不是只会写「采得百花成蜜后，为谁辛苦为谁甜」的诗人，而是一个被后人、也被当时科考官小看了的大诗人。晚唐的没落，帝国的黄昏，这就是罗隐的命。他的诗里有一种长期不得志后的痛苦和对命运的无力感。</p>
+      <div class="dc-poem-items" style="margin:14px 0">
+        <div class="dc-poem full">
+          <div class="dc-poem-title">《赠妓云英》</div>
+          <div class="dc-poem-author">唐 · 罗隐</div>
+          <div class="dc-poem-body">钟陵醉别十余春，重见云英掌上身。<br>我未成名君未嫁，可能俱是不如人。</div>
+          <div class="dc-poem-note">两个人都被命运困住后的尴尬和悲凉。罗隐看到云英仍未脱离旧境，自己也仍未成名，写出「痛彻心扉」之痛。</div>
+        </div>
+      </div>
+      <div class="dc-quote b">时来天地皆同力，运去英雄不自由。</div>
+      <p class="dc-p">这种表达，是当代人的「嘴替」，写出了人在命运和时代面前的无力。</p>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2">《咏蟹》：平实描述里的深刻哲理</div>
+      <div class="dc-poem-items" style="margin:0 0 14px">
+        <div class="dc-poem full">
+          <div class="dc-poem-title">《咏蟹》</div>
+          <div class="dc-poem-author">唐 · 皮日休</div>
+          <div class="dc-poem-body">未游沧海早知名，有骨还从肉上生。<br>莫道无心畏雷电，海龙王处也横行。</div>
+        </div>
+      </div>
+      <ul class="dc-ul">
+        <li>第一句：说螃蟹名气大，横行霸道</li>
+        <li>第二句：一般动物骨在内肉在外，螃蟹却是「骨头长在外面」——这是「骨气」</li>
+        <li>第三、四句：矛盾统一——螃蟹平时胆小怕雷，却敢在海龙王面前横着走。它不是绝对胆小，而是「分对象」</li>
+      </ul>
+      <p class="dc-p">通过对动物的平实描写，写出了深刻的哲理和思想深度。这是好文章的典范。</p>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 g">《未展芭蕉》：令人拍案叫绝的层次与比喻</div>
+      <div class="dc-poem-items" style="margin:0 0 14px">
+        <div class="dc-poem full">
+          <div class="dc-poem-title">《未展芭蕉》</div>
+          <div class="dc-poem-author">唐 · 钱珝</div>
+          <div class="dc-poem-body">冷烛无烟绿蜡干，芳心犹卷怯春寒。<br>一缄书札藏何事，会被东风暗拆看。</div>
+          <div class="dc-poem-note">含苞未展的芭蕉叶 → 未点燃的绿色蜡烛 → 因春寒而紧锁芳心的少女 → 一封没拆开的信札。随着春风舒展，层层比喻在「暗拆看」中完成情感释放。没有大词，却很精巧。</div>
+        </div>
+      </div>
+      <p class="dc-p">这首诗的妙处在于层层转喻：植物、少女心事、书信、春风，彼此相接，最后瞬间爆发。不靠堆华丽词语，靠比喻准确、层次清楚。</p>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 b">史铁生：矛盾统一体现深刻哲思</div>
+      <div class="dc-quote b">但是太阳，它每时每刻都是夕阳也都是旭日。当它熄灭着走下山去收尽苍凉残照之际，正是它在另一面燃烧着爬上山巅布散烈烈朝晖之时。那一天，我也将沉静着走下山去，扶着我的拐杖。有一天，在某一处山洼里，势必会跑上来一个欢蹦的孩子，抱着他的玩具。当然，那不是我。但是，那不是我吗？<br><br>——史铁生《我与地坛》</div>
+      <ul class="dc-ul">
+        <li>太阳对我来说是夕阳，但在地球的另一头，它也是旭日</li>
+        <li>我看着它熄灭，它在另一面却在熊熊燃烧</li>
+        <li>我终将死去，但死去的我，何尝不是新生</li>
+      </ul>
+      <div class="dc-conc">无论写景、写物、写人，还是叙事，都不应只追求语言华丽。语言只是入口，真正决定文章高低的，是观察、逻辑、思想和情感的统一。所谓「真情实感」，追求的不是文字的华美，而是文字本身的张力，给人带来情感上的共振。</div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 p">作文方法</div>
+      <div class="dc-methods">
+        <div class="dc-method">
+          <div class="dc-method-title">矛盾统一</div>
+          <p>把看似对立的两面放在一起写，文章就有了思想层次。《咏蟹》写螃蟹怕雷却不怕海龙王；史铁生写夕阳即旭日、死亡即新生。矛盾统一是让文章有深度的最有力手法。</p>
+        </div>
+        <div class="dc-method">
+          <div class="dc-method-title">层层比喻（转喻链）</div>
+          <p>《未展芭蕉》的写法：A 像 B，B 像 C，C 像 D，最后在 D 处完成情感爆发。比喻不要只用一层，让它层层推进，最后「暗拆看」式地打开，读者会有豁然开朗之感。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 b">拓展阅读</div>
+      <div class="dc-poem-group">
+        <div class="dc-poem-group-label">苦读备考 · 仕途百态</div>
+        <div class="dc-poem-items">
+          <div class="dc-poem">
+            <div class="dc-poem-title">《劝学》</div>
+            <div class="dc-poem-author">唐 · 颜真卿</div>
+            <div class="dc-poem-body">三更灯火五更鸡，正是男儿读书时。<br>黑发不知勤学早，白首方悔读书迟。</div>
+            <div class="dc-poem-note">体现科考前的苦读状态，「三更灯火五更鸡」写出从深夜读到清晨，和今天备考刷题很像。</div>
+          </div>
+          <div class="dc-poem">
+            <div class="dc-poem-title">《中隐》节选</div>
+            <div class="dc-poem-author">唐 · 白居易</div>
+            <div class="dc-poem-body">大隐住朝市，小隐入丘樊。<br>丘樊太冷落，朝市太嚣喧。<br>不如作中隐，隐在留司官。<br>似出复似处，非忙亦非闲。</div>
+            <div class="dc-poem-note">最能体现白居易「反内卷方案」：不彻底逃离，也不完全陷入，在城市和山林之间找到适中的生活。</div>
+          </div>
+        </div>
+      </div>
+      <div class="dc-poem-group">
+        <div class="dc-poem-group-label">打工人的千年共鸣</div>
+        <div class="dc-poem-items">
+          <div class="dc-poem full">
+            <div class="dc-poem-title">《初授赞善大夫早朝寄李二十助教》节选</div>
+            <div class="dc-poem-author">唐 · 白居易</div>
+            <div class="dc-poem-body">远坊早起常侵鼓，瘦马行迟苦费鞭。<br>一种共君官职冷，不如犹得日高眠。</div>
+            <div class="dc-poem-note">白居易写自己住得远，早起赶早朝，骑着瘦马慢慢赶路——很像现代打工人的通勤之苦。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  readings: [
+    { title: "《劝学》", author: "颜真卿", dynasty: "唐", themes: ["励志与成长"],
+      lines: "三更灯火五更鸡，正是男儿读书时。\n黑发不知勤学早，白首方悔读书迟。",
+      note: "「三更灯火五更鸡」写出从深夜读到清晨，和今天备考刷题很像。" },
+    { title: "《中隐》节选", author: "白居易", dynasty: "唐", themes: ["隐逸与风骨", "哲思人生"],
+      lines: "大隐住朝市，小隐入丘樊。\n丘樊太冷落，朝市太嚣喧。\n不如作中隐，隐在留司官。\n似出复似处，非忙亦非闲。",
+      note: "最能体现白居易「反内卷方案」：不彻底逃离，也不完全陷入，在城市和山林之间找到适中的生活。" },
+    { title: "《初授赞善大夫早朝》节选", author: "白居易", dynasty: "唐", themes: ["仕途与命运"],
+      lines: "远坊早起常侵鼓，瘦马行迟苦费鞭。\n一种共君官职冷，不如犹得日高眠。",
+      note: "白居易写自己住得远，早起赶早朝，骑着瘦马慢慢赶路——很像现代打工人的通勤之苦。" }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────
+// 6月7日
+// ─────────────────────────────────────────────────────────────
+"2026-06-07": {
+  topic:    "2026 高考作文全解析",
+  subtitle: "四套题目解析：坦诚交流、认知成长、做规划与下功夫、调的辩证统一",
+  body: `
+    <div class="dc-sec">
+      <div class="dc-h2">一、全国甲卷（四川等地）：坦诚交流才有真正的相遇</div>
+      <p class="dc-p">题目：每个人都要学习与他人相处。有时，我们为避免冲突而不愿表达自己的想法。其实，坦诚交流才有可能迎来真正的相遇。这引发了你怎样的联想和思考？</p>
+
+      <div class="dc-h3">万能结构：正反 + 升华</div>
+      <div class="dc-methods">
+        <div class="dc-method">
+          <div class="dc-method-title">第一步：正面举例（立论）</div>
+          <p>列举正面积极的例子：<br>管鲍之交（信任）、伯牙子期（知音）、马恩之交、毛周之交。</p>
+        </div>
+        <div class="dc-method">
+          <div class="dc-method-title">第二步：反面举例（对比）</div>
+          <p>列举导致失败的反面例子：<br>庞涓孙膑（猜忌导致友情破裂）、宋朝亡国（猜忌武将）、各种党争。</p>
+        </div>
+      </div>
+      <div class="dc-quote">第三步：升华——从个体历史例子出发，上升到国际交往层面，强调增强互信、互利共赢、正视分歧、守望相助，统一到人类命运共同体。</div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 g">二、全国Ⅰ卷：你对哪个词语的理解发生了变化？</div>
+      <p class="dc-p">考查动态认知思辨：不是解释词语，而是写同一个词语在人生不同阶段理解的更新、深化、升华。</p>
+
+      <div class="dc-h3">以「自律」为例：三层认知递进</div>
+      <div class="dc-people">
+        <div class="dc-person">
+          <div class="dc-person-name">低级阶段：他律</div>
+          <div class="dc-person-role">外部约束</div>
+          <p>小时候的自律就是听父母的话，做事不磨蹭，上课认真听讲，考试拿 100 分。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">中级阶段：慎独</div>
+          <div class="dc-person-role">内在坚守</div>
+          <p>独处时也要坚守本心，不放纵、不逾矩。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">高级阶段：责任与担当</div>
+          <div class="dc-person-role">诸葛亮的境界</div>
+          <p>「明知不可为而为之」：明知前路艰难、收效渺茫，仍坚守责任与大义。诸葛亮六出祁山劳而无功，却不对刘禅取而代之，是更高维度的自律。</p>
+        </div>
+      </div>
+      <div class="dc-conc">核心写法：写「成长轨迹」——不是解释词语，是写我随着时代成长，理解深度不断更新，实现个人与时代同频共振。</div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 b">三、北京卷：做规划与下功夫</div>
+      <p class="dc-p">考查二元辩证关系：宏观布局与微观实干的统一。</p>
+      <div class="dc-methods">
+        <div class="dc-method">
+          <div class="dc-method-title">规划（顶层设计）</div>
+          <p>定方向、明路径、稳节奏。对应国家发展顶层设计，如十五五规划时代背景。</p>
+        </div>
+        <div class="dc-method">
+          <div class="dc-method-title">下功夫（主观能动）</div>
+          <p>落地执行、脚踏实地、攻坚克难、发挥创造力。</p>
+        </div>
+      </div>
+      <div class="dc-quote b">核心立意：无规划则盲目，无实干则空泛；规划为纲，实干为基，二者缺一不可。青年个人生涯规划，必须融入国家整体发展大势，以个人实干呼应时代蓝图。</div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 p">四、天津卷：调（diào）与调（tiáo）</div>
+      <p class="dc-p">天津卷是今年思辨难度最高的作文，不靠积累背诵，靠考场即时思辨升华。</p>
+      <div class="dc-methods">
+        <div class="dc-method">
+          <div class="dc-method-title">调 diào：定位与格局</div>
+          <p>基调、格局、顶层规划、既定方向——对应「做规划」，是守正、定调、蓝图。</p>
+        </div>
+        <div class="dc-method">
+          <div class="dc-method-title">调 tiáo：调节与创造</div>
+          <p>调节、变通、优化、主观创造、动态调整——对应「下功夫」，是创新、微调、实干。</p>
+        </div>
+      </div>
+      <div class="dc-quote">高分关键：在固定大局之下主动优化、在时代框架之内创新突破，体现守正与创新、定调与微调、蓝图与实干的辩证统一。</div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 g">高分作文底层逻辑</div>
+      <div class="dc-methods">
+        <div class="dc-method">
+          <div class="dc-method-title">三层递进结构</div>
+          <p>个人层面 → 品格时代层面 → 家国人类层面，由小到大、由浅入深、层层拔高。不要只停留在个人经历，要往上走。</p>
+        </div>
+        <div class="dc-method">
+          <div class="dc-method-title">二元题目写辩证统一</div>
+          <p>规划与实干、守正与创新、定位与调节……不能单写一面，必须互证互补，写出两者缺一不可的关系。</p>
+        </div>
+      </div>
+      <div class="dc-conc">高考考查的是思辨升级能力、概念拆解能力、认知迭代能力，拒绝死记硬背和模板套作。</div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 b">拓展阅读：作文典故速查</div>
+
+      <div class="dc-poem-group">
+        <div class="dc-poem-group-label">正面典故：坦诚与信任</div>
+        <div class="dc-poem-items">
+          <div class="dc-poem">
+            <div class="dc-poem-title">管鲍之交</div>
+            <div class="dc-poem-author">春秋 · 管仲与鲍叔牙</div>
+            <div class="dc-poem-body" style="font-size:13px;line-height:1.9">管仲分利多拿，鲍叔牙知其贫不怪他贪；管仲三次丢官，鲍叔牙说他未遇时机；管仲三次逃兵，鲍叔牙知他家有老母。鲍叔牙后来向齐桓公推荐管仲为相，自己甘居其下，齐国由此称霸。</div>
+            <div class="dc-poem-note">「生我者父母，知我者鲍叔也。」——管鲍之交，比喻交情深厚、彼此信任的朋友关系。</div>
+          </div>
+          <div class="dc-poem">
+            <div class="dc-poem-title">伯牙子期之交</div>
+            <div class="dc-poem-author">先秦 · 俞伯牙与钟子期</div>
+            <div class="dc-poem-body" style="font-size:13px;line-height:1.9">伯牙抚琴，樵夫钟子期能听出「高山」「流水」之意，二人结为知己。次年钟子期去世，伯牙摔碎瑶琴，终生不再弹琴。</div>
+            <div class="dc-poem-note">「知音已逝，弦断有谁听。」——知音难觅，坦诚才能相遇。</div>
+          </div>
+          <div class="dc-poem">
+            <div class="dc-poem-title">马恩之交</div>
+            <div class="dc-poem-author">19世纪 · 马克思与恩格斯</div>
+            <div class="dc-poem-body" style="font-size:13px;line-height:1.9">为资助马克思写《资本论》，恩格斯重返厌恶的经商生活长达 20 年。两人异地保持每天数封书信往来，现存 1300 余封。马克思逝世后，65 岁的恩格斯耗时多年整理出版《资本论》第二、三卷。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dc-poem-group">
+        <div class="dc-poem-group-label">反面典故：猜忌与不信任的代价</div>
+        <div class="dc-poem-items">
+          <div class="dc-poem">
+            <div class="dc-poem-title">庞涓与孙膑</div>
+            <div class="dc-poem-author">战国 · 同门相残</div>
+            <div class="dc-poem-body" style="font-size:13px;line-height:1.9">二人同拜鬼谷子为师。庞涓嫉妒孙膑才能，诬陷其罪，使孙膑受臏刑终身残疾。孙膑逃至齐国后，以「围魏救赵」大败魏军，庞涓最终兵败自刎。</div>
+            <div class="dc-poem-note">「互信」的最大敌人往往不是外部的敌人，而是内心无法克制的嫉妒。</div>
+          </div>
+          <div class="dc-poem">
+            <div class="dc-poem-title">宋朝猜忌武将</div>
+            <div class="dc-poem-author">历史教训</div>
+            <div class="dc-poem-body" style="font-size:13px;line-height:1.9">宋太祖「杯酒释兵权」，重文轻武。北宋靖康之耻，徽钦二帝被俘；南宋以「莫须有」杀岳飞，自毁长城。</div>
+            <div class="dc-poem-note">猜忌武将导致朝廷积贫积弱，最终亡国。信任是一切合作的基础。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  readings: [
+    { title: "管鲍之交", author: "管仲·鲍叔牙", dynasty: "春秋", themes: ["哲思人生"],
+      lines: "管仲分利多拿，鲍叔牙知其贫不怪他贪；管仲三次丢官，鲍叔牙说他未遇时机；管仲三次逃兵，鲍叔牙知他家有老母。鲍叔牙后来向齐桓公推荐管仲为相，自己甘居其下，齐国由此称霸。",
+      note: "「生我者父母，知我者鲍叔也。」——管鲍之交，比喻交情深厚、彼此信任的朋友关系。" },
+    { title: "伯牙子期之交", author: "俞伯牙·钟子期", dynasty: "先秦", themes: ["哲思人生"],
+      lines: "伯牙抚琴，樵夫钟子期能听出「高山」「流水」之意，二人结为知己。次年钟子期去世，伯牙摔碎瑶琴，终生不再弹琴。",
+      note: "「知音已逝，弦断有谁听。」——知音难觅，坦诚才能相遇。" },
+    { title: "马恩之交", author: "马克思·恩格斯", dynasty: "19世纪", themes: ["哲思人生"],
+      lines: "为资助马克思写《资本论》，恩格斯重返厌恶的经商生活长达20年。两人异地每天数封书信往来，现存1300余封。马克思逝世后，65岁的恩格斯耗时多年整理出版《资本论》第二、三卷。",
+      note: "" },
+    { title: "庞涓与孙膑", author: "庞涓·孙膑", dynasty: "战国", themes: ["仕途与命运"],
+      lines: "二人同拜鬼谷子为师。庞涓嫉妒孙膑才能，诬陷其罪，使孙膑受臏刑终身残疾。孙膑逃至齐国后，以「围魏救赵」大败魏军，庞涓最终兵败自刎。",
+      note: "「互信」的最大敌人往往不是外部的敌人，而是内心无法克制的嫉妒。" },
+    { title: "宋朝猜忌武将", author: "历史教训", dynasty: "宋", themes: ["家国情怀"],
+      lines: "宋太祖「杯酒释兵权」，重文轻武。北宋靖康之耻，徽钦二帝被俘；南宋以「莫须有」杀岳飞，自毁长城。",
+      note: "猜忌武将导致朝廷积贫积弱，最终亡国。信任是一切合作的基础。" }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────
+// 6月10日
+// ─────────────────────────────────────────────────────────────
+"2026-06-10": {
+  topic:    "冯友兰四重境界与共情：语文的底层能力",
+  subtitle: "从冯友兰到孔子师徒三人，读懂「己所不欲，勿施于人」",
+  body: `
+    <div class="dc-sec">
+      <div class="dc-h2">讨论起点：冯友兰的人生四重境界</div>
+      <p class="dc-p">哲学家冯友兰将人的精神境界由低到高分为四层，源于对儒家思想的深度诠释，是理解中国人生哲学的重要框架。境界的差异不在于做的事情不同，而在于对自己行为的「觉解」（理解与意识）程度不同。</p>
+      <div class="dc-people">
+        <div class="dc-person">
+          <div class="dc-person-name">自然境界（最低）</div>
+          <div class="dc-person-role">顺应本能，不追问意义</div>
+          <p>饿了吃，困了睡，既无明确目的，也不追问行为意义，处于朴素的「混沌」状态。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">功利境界（第二层）</div>
+          <div class="dc-person-role">以自我为中心</div>
+          <p>有自我意识，做事以个人利益为中心。虽结果可能利己或利他，但出发点是「为自己」。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">道德境界（第三层）</div>
+          <div class="dc-person-role">儒家「贤德之人」</div>
+          <p>为社会和大家的利益行动，追求「义」而非「利」，是儒家所称的「贤德之人」。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">天地境界（最高）</div>
+          <div class="dc-person-role">天人合一，只可仰望</div>
+          <p>将宇宙视为整体，追求天人合一，超越个人与社会局限，达到圣人境界。此境界只可仰望。</p>
+        </div>
+      </div>
+      <p class="dc-p">前两种境界是人的自然状态，后两种境界需要自我觉醒和修养才能达到。孔子七十岁「从心所欲，不逾矩」，正是从道德境界向天地境界迈进的表现——内心完全自由，却天然合于天理，不再需要刻意约束。</p>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 g">孔子与《论语》：随机问答的圣书</div>
+      <div class="dc-quote g">吾十有五而志于学，三十而立，四十而不惑，五十而知天命，六十而耳顺，七十而从心所欲，不逾矩。——孔子自述一生学习历程</div>
+      <p class="dc-p">《论语》不是孔子坐下来写的著作，而是不同年龄、不同背景的学生随机提问，孔子随机作答的语录汇编。这些问答涉及的都是极大的人生问题，孔子的回答穿越千年依然成立。</p>
+      <p class="dc-p">孔子的核心主张：忠与恕。「忠」是尽己之心，「恕」是推己及人——「己所不欲，勿施于人」。这两字是他思想的根基，比「仁」更具体、更可操作。</p>
+      <p class="dc-p">孔子十五岁立志学习，一生勤奋，晚年仍整理《诗》《书》《礼》《乐》等典籍。这种终身学习的精神，本身就是最好的示范。</p>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 b">孔子的三位弟子：各有性格，各有命运</div>
+      <div class="dc-people" style="grid-template-columns:1fr;">
+        <div class="dc-person">
+          <div class="dc-person-name">子路（仲由）</div>
+          <div class="dc-person-role">直性子 · 死于非命</div>
+          <p>孔子批评最多、也感情最深的弟子。子路性格直率，经常顶撞孔子，孔子骂他「野哉，由也！」。「知之为知之，不知为不知，是知也」正是对子路的教诲。子路在卫国内乱中，孔子早已预言「子路必死」——因为他一定不会躲祸，他非得往前冲。知徒莫若师。果然子路被杀，遗体受醢刑（剁成肉酱）。孔子此后不复食肉酱。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">颜回</div>
+          <div class="dc-person-role">最得意 · 英年早逝</div>
+          <p>「一箪食，一瓢饮，在陋巷，人不堪其忧，回也不改其乐。」孔子最欣赏的弟子，却英年早逝。孔子痛哭「天丧予！」——命运对最好的学生并不格外眷顾。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">宰予</div>
+          <div class="dc-person-role">言行不一的「辩才」</div>
+          <p>宰予白天睡觉，被孔子斥责「朽木不可雕也，粪土之墙不可圬也」。孔子愤怒的实质并非只因睡觉，而是「听其言而观其行」——宰予之前说得漂亮，行为却松懈，这是对言行不一的批判。</p>
+        </div>
+      </div>
+      <div class="dc-conc">《论语》是随机应答的记录，却成了圣书；子路的一生是性格即命运的注脚。真正了解一个人的，是长期相处的老师。</div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 p">语文学习的核心：共情能力</div>
+      <p class="dc-p">学语文，共情能力是最重要的底层能力。孔子的「恕」（推己及人），本质上就是共情能力的最高体现——能设身处地感受他人，才能准确捕捉和传递情感。</p>
+      <ul class="dc-ul">
+        <li>同样走过一场雪天，有人只觉得雪大烦人；有人却注意到路边梅花花骨朵，写出「前村深雪里，昨夜一枝开」。（原稿为「昨夜数枝开」，经诗人郑谷建议改为「一枝」，一字之改，早意顿出——这就是用词的精准。）</li>
+        <li>苏轼被贬途中遇雨，随行人皆狼狈，他却写道：「竹杖芒鞋轻胜马，谁怕？一蓑烟雨任平生。」——同样的雨，不同的感受，决定了文字的深度。</li>
+      </ul>
+      <p class="dc-p">先秦以来，文学的基调是「伤春悲秋」——这是人所共有的感受，只是有的人更细腻、更善于捕捉和表达。写作本质上是把人所共有的情感，用准确的意象说出来。语文，是一门需要共情的学科。</p>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 b">拓展阅读</div>
+      <div class="dc-poem-group">
+        <div class="dc-poem-group-label">心境决定文字深度</div>
+        <div class="dc-poem-items">
+          <div class="dc-poem">
+            <div class="dc-poem-title">《定风波》节选</div>
+            <div class="dc-poem-author">宋 · 苏轼</div>
+            <div class="dc-poem-body">莫听穿林打叶声，何妨吟啸且徐行。<br>竹杖芒鞋轻胜马，谁怕？<br>一蓑烟雨任平生。<br>回首向来萧瑟处，归去，<br>也无风雨也无晴。</div>
+            <div class="dc-poem-note">被贬途中遇雨，随行人皆狼狈，苏轼独自从容。雨是一样的，境界全然不同。</div>
+          </div>
+          <div class="dc-poem">
+            <div class="dc-poem-title">《早梅》</div>
+            <div class="dc-poem-author">唐 · 齐己</div>
+            <div class="dc-poem-body">万木冻欲折，孤根暖独回。<br>前村深雪里，昨夜一枝开。<br>风递幽香出，禽窥素艳来。<br>明年如应律，先发望春台。</div>
+            <div class="dc-poem-note">同是雪天，细心的人注意到深雪里悄然开放的一枝梅。原稿「数枝」，经诗人郑谷建议改为「一枝」，一字之改，早意顿出——这就是共情力。</div>
+          </div>
+        </div>
+      </div>
+      <div class="dc-poem-group">
+        <div class="dc-poem-group-label">孔子自述成长轨迹</div>
+        <div class="dc-poem-items">
+          <div class="dc-poem full">
+            <div class="dc-poem-title">《论语·为政》节选</div>
+            <div class="dc-poem-author">春秋 · 孔子</div>
+            <div class="dc-poem-body">吾十有五而志于学，三十而立，<br>四十而不惑，五十而知天命，<br>六十而耳顺，七十而从心所欲，不逾矩。</div>
+            <div class="dc-poem-note">孔子的人生自述，是最好的「成长轨迹」写作范本：从外在约束到内在自由，每一阶段都有具体的标志。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  readings: [
+    { title: "《定风波》节选", author: "苏轼", dynasty: "宋", themes: ["隐逸与风骨", "哲思人生"],
+      lines: "莫听穿林打叶声，何妨吟啸且徐行。\n竹杖芒鞋轻胜马，谁怕？\n一蓑烟雨任平生。\n回首向来萧瑟处，归去，\n也无风雨也无晴。",
+      note: "被贬途中遇雨，随行人皆狼狈，苏轼独自从容。雨是一样的，境界全然不同。" },
+    { title: "《早梅》", author: "齐己", dynasty: "唐", themes: ["哲思人生"],
+      lines: "万木冻欲折，孤根暖独回。\n前村深雪里，昨夜一枝开。\n风递幽香出，禽窥素艳来。\n明年如应律，先发望春台。",
+      note: "同是雪天，细心的人注意到深雪里悄然开放的一枝梅。原稿「数枝」，经诗人郑谷建议改为「一枝」，一字之改，早意顿出——这就是共情力。" },
+    { title: "《论语·为政》节选", author: "孔子", dynasty: "春秋", themes: ["励志与成长", "哲思人生"],
+      lines: "吾十有五而志于学，三十而立，\n四十而不惑，五十而知天命，\n六十而耳顺，七十而从心所欲，不逾矩。",
+      note: "孔子的人生自述，是最好的「成长轨迹」写作范本：从外在约束到内在自由，每一阶段都有具体的标志。" }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────
+// 6月18日
+// ─────────────────────────────────────────────────────────────
+"2026-06-18": {
+  topic:    "一代人，有一代人的风格",
+  subtitle: "从孟子的嘴炮，到嵇康的隐居，再到后来的顺从",
+  body: `
+    <div class="dc-sec">
+      <div class="dc-h2">讨论起点</div>
+      <p class="dc-p">读书人面对权力，可以有几种活法？今天从一个小话头开始——登妈说她妈妈养娃「很随意」，到她这代反着来，特别上心。厚爸接了一句：</p>
+      <p class="dc-p" style="font-family:var(--serif);font-size:17px;color:var(--a3);font-weight:500;margin:4px 0 12px;">「一代人有一代人的风格嘛。」</p>
+      <p class="dc-p">话锋一转，讲到了中国历史上最值得细品的一条线：知识分子跟权力之间，那种关系是怎么一步步变的。</p>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 g">历史演变：三代读书人，三种活法</div>
+      <div class="dc-people" style="grid-template-columns:1fr;">
+        <div class="dc-person">
+          <div class="dc-person-name">【先秦】 直接开骂型</div>
+          <div class="dc-person-role">「你做得不对，我就玩命批评你」</div>
+          <p>孔孟那个年代，臣子和君主是可以平起平坐讲道理的。孟子见齐宣王，当面一道道追问，逼得大王无处可逃。知识分子认为：我有责任告诉你真相，哪怕你是皇帝。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">【魏晋】 优雅拒绝型</div>
+          <div class="dc-person-role">「你不要过来，别烦我」</div>
+          <p>到了乱世，名士换了一种方式：不骂你，但也不理你。嵇康被推荐做官，直接写信绝交；钟会带队来访，他就一边打铁一边黑脸，全程不搭理。这叫魏晋风骨。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">【唐宋后】 彻底臣服型</div>
+          <div class="dc-person-role">「你让我死，我就去死」</div>
+          <p>理学兴起，君臣天平彻底倒向君主。「忠君」从一种选择变成道德义务。知识分子越来越难以「独善其身」，每个人都无法逃脱时代。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2">读原文：孟子是怎么批评齐宣王的</div>
+      <p class="dc-p">厚爸说孟子「简直太不会唠嗑了，搁唐宋砍一百次头都不够的」。来看原文——</p>
+      <div class="dc-quote" style="font-style:normal;font-family:var(--serif);line-height:2.1;">
+        孟子谓齐宣王曰：「王之臣，有托其妻子于其友而之楚游者。比其反也，则冻馁其妻子，则如之何？」<br>
+        王曰：「弃之。」<br>
+        曰：「士师不能治士，则如之何？」<br>
+        王曰：「已之。」<br>
+        曰：「四境之内不治，则如之何？」<br>
+        王顾左右而言他。<br>
+        <span style="font-size:12px;color:var(--cp-faint);">——《孟子·梁惠王下》</span>
+      </div>
+      <p class="dc-p">厚爸当时是这样讲的：</p>
+      <div class="dc-quote g" style="font-style:normal;line-height:2.2;">
+        <p style="margin-bottom:6px;"><strong style="color:var(--a2);">【孟子】</strong> 大王，你的臣子里面，有一个人要去楚国浪，然后把老婆孩子交给朋友照顾。等他回来才发现，这朋友压根也没照顾好他的老婆孩子啊，在那挨饿受冻，你说咋整？</p>
+        <p style="margin-bottom:6px;"><strong style="color:var(--a1);">【齐宣王】</strong> 友尽，绝交。</p>
+        <p style="margin-bottom:6px;"><strong style="color:var(--a2);">【孟子】</strong> 回答正确加十分，下一个问题：如果司法的官员不能治理好他的下属，你说咋整？</p>
+        <p style="margin-bottom:6px;"><strong style="color:var(--a1);">【齐宣王】</strong> 那就炒他鱿鱼！滚蛋</p>
+        <p style="margin-bottom:6px;"><strong style="color:var(--a2);">【孟子】</strong> 再给你加十分，那么下一个问题就是：如果一个君主，没办法治理好他的国家，你说咋整？？</p>
+        <p style="margin-bottom:6px;"><strong style="color:var(--a1);">【齐宣王】</strong> （心里一万匹那个什么马奔腾而过）</p>
+        <p><strong style="color:var(--a4);">【厚爸】</strong> 顾左右而言他——你们都懂了。这就是这个成语的词源。装没听见，左顾右盼，赶紧扯别的话题。搁唐宋砍100次头都不够。</p>
+      </div>
+      <p class="dc-p">三连问，越问越近，逼到没退路。孟子的逻辑是：你自己说的标准，你自己够不够？</p>
+      <div class="dc-quote" style="font-style:normal;font-family:var(--serif);line-height:2.2;">
+        君之视臣如手足，则臣视君如腹心；<br>
+        君之视臣如犬马，则臣视君如国人；<br>
+        君之视臣如土芥，则臣视君如寇雠。<br>
+        <span style="font-size:12px;color:var(--cp-faint);">——《孟子·离娄下》　孟子真敢说。</span>
+      </div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 b">人物聚焦：嵇康——全程打铁，不理来访者</div>
+      <p class="dc-p">厚爸说「这家伙身上好玩的事情太多了」。司马氏想收买知识圈，让心腹山涛推荐嵇康出仕，相当于直接给个组织部长的职位。嵇康大怒，我这隐居得好好的，你这干的是人事吗？写了著名的《与山巨源绝交书》，友尽。</p>
+      <p class="dc-p">司马政权一看这不行啊，喊你都不来，我不要FACE的吗，我这还需要你们这帮人给我站台呢！司马昭就让钟会去拜访嵇康。嵇康当时在打铁，好友向秀拉风箱。全程黑脸，一声不吭。然后钟会实在没FACE，滚之前两人有两句著名的对话：</p>
+      <div class="dc-quote b" style="font-style:normal;line-height:2.2;">
+        <p style="margin-bottom:6px;"><strong>【嵇康问】</strong> 你听到啥了，见到啥了，你就来我这？</p>
+        <p><strong>【钟会说】</strong> 你管我听到啥了，我听到该听到的就来了，看见我看见的就走，你管呢？</p>
+      </div>
+      <div class="dc-quote" style="font-style:normal;font-family:var(--serif);line-height:2.2;margin-top:8px;">
+        嵇康：何所闻而来？何所见而去？<br>
+        钟会：闻所闻而来，见所见而去。
+      </div>
+      <p class="dc-p">钟会用了一个完美的格式回击，但心里当然恨死了。后来进谗言，司马昭杀了嵇康。临刑前，嵇康抚琴一曲《广陵散》，从此绝响。</p>
+      <p class="dc-p" style="color:var(--a2);font-family:var(--serif);font-style:italic;">「后果很严重，嵇康后来就死在这事儿上了。再往后，士人都不能独善其身了，想独善其身？没门！所以说，一代人有一代人的风格。」——厚爸</p>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 p">竹林七贤：一个时代，七种活法</div>
+      <p class="dc-p">嵇康不是孤例。魏晋乱世，有七个人聚在竹林里喝酒、弹琴、清谈，各自以不同的方式回应那个时代。</p>
+      <div class="dc-people" style="grid-template-columns:1fr;">
+        <div class="dc-person">
+          <div class="dc-person-name">嵇康</div>
+          <div class="dc-person-role">打铁·绝交·广陵散</div>
+          <p>用沉默和拒绝对抗权力，写《与山巨源绝交书》明志。临刑前抚琴《广陵散》，从容赴死。「非汤武而薄周孔，越名教而任自然。」</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">阮籍</div>
+          <div class="dc-person-role">青白眼·穷途之哭</div>
+          <p>看得上的人用青眼迎接，看不上的给白眼。没事驾车乱走，走到没路嚎啕大哭，原路返回。「时无英雄，使竖子成名。」</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">山涛</div>
+          <div class="dc-person-role">入仕·举荐·被绝交</div>
+          <p>后来接受司马氏官职，推荐嵇康入仕，换来一封绝交信。选择不同，各有代价，都无法逃脱时代。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">向秀</div>
+          <div class="dc-person-role">拉风箱·思旧赋</div>
+          <p>给嵇康打铁时拉风箱。嵇康死后，路过旧居听到笛声，写下《思旧赋》，没有一字提嵇康，却字字都是他。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">刘伶</div>
+          <div class="dc-person-role">嗜酒·死便埋我</div>
+          <p>把喝酒当人生哲学，随身带人拿锹跟着走，「死在哪就埋在哪」。活得彻底，也活得潦倒。「死便埋我。」</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">王戎</div>
+          <div class="dc-person-role">务实·仕途顺遂</div>
+          <p>七贤里最「识时务」，后来官至尚书令。卖李子要先把核钻破，怕别人拿了种子。聪明而谨慎。</p>
+        </div>
+        <div class="dc-person">
+          <div class="dc-person-name">阮咸</div>
+          <div class="dc-person-role">音律·月夜共饮</div>
+          <p>阮籍侄子，精通音律，月夜和族人用大盆共饮，猪来凑热闹就一起喝。琵琶前身「阮」以他命名。</p>
+        </div>
+      </div>
+      <div class="dc-conc">七个人，七种选择——以死明志、入世周旋、借酒逃世。时代压下来，没有完美答案。</div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2">时代与个人</div>
+      <p class="dc-p">厚爸最后说了一句很有分量的话：</p>
+      <p class="dc-p" style="font-family:var(--serif);font-size:20px;font-weight:600;color:var(--a1);margin:8px 0 16px;">「每个人都不能逃脱时代。」</p>
+      <p class="dc-p">嵇康已经是魏晋风骨的极致，但他还是死了。到了唐宋，连这种拒绝的空间都越来越窄。这不是个人性格的问题，是整个制度在一点点压缩知识分子的腰杆。</p>
+      <p class="dc-p">这让我们重新理解孟子的可贵——那是历史上为数不多的、读书人真正可以当面说「不」的时代。</p>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 p">作文方法</div>
+      <div class="dc-methods">
+        <div class="dc-method">
+          <div class="dc-method-title">① 层层递进的追问法（孟子式）</div>
+          <p>不直接说结论，从小问题问到大问题，让对方自己说出答案，再被反将一军。写议论文时，先设一个大家都认同的小道理，再一步步推到核心观点，让读者跟着走进去。</p>
+        </div>
+        <div class="dc-method">
+          <div class="dc-method-title">② 用行动代替表态（嵇康式）</div>
+          <p>嵇康没有发表演讲，只是在打铁。行动本身就是宣言。写人物时，与其写「他很有骨气」，不如写他在做什么——全程打铁，不抬头，不说话。细节比结论有力量。</p>
+        </div>
+        <div class="dc-method">
+          <div class="dc-method-title">③ 对比结构写时代变迁</div>
+          <p>「先秦·魏晋·唐宋」三阶段对比，让抽象的时代变化变得具体可感。遇到写「变化」「演变」类题目，选两三个典型时期，找各自最有代表性的人或事，形成对照，文章就有了纵深。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="dc-sec">
+      <div class="dc-h2 b">拓展阅读</div>
+      <div class="dc-poem-group">
+        <div class="dc-poem-group-label">魏晋风骨与文人的选择</div>
+        <div class="dc-poem-items">
+          <div class="dc-poem">
+            <div class="dc-poem-title">《与山巨源绝交书》节选</div>
+            <div class="dc-poem-author">魏晋 · 嵇康</div>
+            <div class="dc-poem-body">非汤武而薄周孔，越名教而任自然。</div>
+            <div class="dc-poem-note">魏晋最著名的绝交信，嵇康列出九条不能做官的理由，句句是自我剖白，也是对那个时代的宣战。读完会懂，有人的拒绝，本身就是一种答案。</div>
+          </div>
+          <div class="dc-poem">
+            <div class="dc-poem-title">《思旧赋》节选</div>
+            <div class="dc-poem-author">魏晋 · 向秀</div>
+            <div class="dc-poem-body">叹黍离之愍周兮，悲麦秀于殷墟。</div>
+            <div class="dc-poem-note">嵇康被杀后，向秀路过旧居，听到邻人吹笛，写下这篇短赋。没有一字提嵇康的名字，却字字都是他。魏晋的悲哀，藏在克制里。</div>
+          </div>
+          <div class="dc-poem">
+            <div class="dc-poem-title">《归去来兮辞》节选</div>
+            <div class="dc-poem-author">东晋 · 陶渊明</div>
+            <div class="dc-poem-body">既自以心为形役，奚惆怅而独悲？</div>
+            <div class="dc-poem-note">嵇康之后的另一种答案——不骂，不抗，直接种地归隐。陶渊明是魏晋精神的延续，但选了一条代价更小、也更孤独的路。</div>
+          </div>
+          <div class="dc-poem">
+            <div class="dc-poem-title">《酬乐天扬州初逢席上见赠》</div>
+            <div class="dc-poem-author">唐 · 刘禹锡</div>
+            <div class="dc-poem-body">沉舟侧畔千帆过，病树前头万木春。</div>
+            <div class="dc-poem-note">唐代知识分子被贬之后的答案——不抗拒，不屈服，在时代的缝隙里找到自己的位置。厚爸说刘禹锡「嘴贱是属于嘴贱，从另一个角度看就是风骨」。</div>
+          </div>
+        </div>
+      </div>
+      <div class="dc-poem-group">
+        <div class="dc-poem-group-label">《孟子》入门篇目</div>
+        <div class="dc-poem-items">
+          <div class="dc-poem full">
+            <div class="dc-poem-title">《孟子》入门推荐</div>
+            <div class="dc-poem-author">战国 · 孟子</div>
+            <div class="dc-poem-body">「生于忧患，死于安乐。」<br>「我善养吾浩然之气。」</div>
+            <div class="dc-poem-note">孟子的文章逻辑极强，是学写议论文最好的范本。《梁惠王上下》《公孙丑》《告子》适合初中以上精读，论证结构可以直接拿来用。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  readings: [
+    { title: "《与山巨源绝交书》节选", author: "嵇康", dynasty: "魏晋", themes: ["隐逸与风骨"],
+      lines: "非汤武而薄周孔，越名教而任自然。",
+      note: "魏晋最著名的绝交信，嵇康列出九条不能做官的理由，句句是自我剖白，也是对那个时代的宣战。读完会懂，有人的拒绝，本身就是一种答案。" },
+    { title: "《思旧赋》节选", author: "向秀", dynasty: "魏晋", themes: ["隐逸与风骨", "送别与离愁"],
+      lines: "叹黍离之愍周兮，悲麦秀于殷墟。",
+      note: "嵇康被杀后，向秀路过旧居，听到邻人吹笛，写下这篇短赋。没有一字提嵇康的名字，却字字都是他。魏晋的悲哀，藏在克制里。" },
+    { title: "《归去来兮辞》节选", author: "陶渊明", dynasty: "东晋", themes: ["隐逸与风骨"],
+      lines: "既自以心为形役，奚惆怅而独悲？",
+      note: "嵇康之后的另一种答案——不骂，不抗，直接种地归隐。陶渊明是魏晋精神的延续，但选了一条代价更小、也更孤独的路。" },
+    { title: "《酬乐天扬州初逢席上见赠》", author: "刘禹锡", dynasty: "唐", themes: ["仕途与命运", "励志与成长"],
+      lines: "沉舟侧畔千帆过，病树前头万木春。",
+      note: "唐代知识分子被贬之后的答案——不抗拒，不屈服，在时代的缝隙里找到自己的位置。" },
+    { title: "《孟子》入门推荐", author: "孟子", dynasty: "战国", themes: ["哲思人生", "家国情怀"],
+      lines: "「生于忧患，死于安乐。」\n「我善养吾浩然之气。」",
+      note: "孟子的文章逻辑极强，是学写议论文最好的范本。《梁惠王上下》《公孙丑》《告子》适合初中以上精读，论证结构可以直接拿来用。" }
+  ]
 },
 
 // ─────────────────────────────────────────────────────────────
@@ -608,6 +1468,115 @@ function buildLanding() {
     </div>
   `).join('');
 }
+
+// ============================================================
+// 📚 拓展阅读索引
+// ============================================================
+const THEME_ORDER = ['仕途与命运','送别与离愁','隐逸与风骨','励志与成长','哲思人生','家国情怀'];
+const DYNASTY_ORDER = ['先秦','春秋','战国','魏晋','东晋','唐','宋','近现代','19世纪','历史教训'];
+
+function dynastyRank(d) {
+  for (let i = 0; i < DYNASTY_ORDER.length; i++) {
+    if (d === DYNASTY_ORDER[i] || d.startsWith(DYNASTY_ORDER[i])) return i;
+  }
+  return 99;
+}
+
+function getAllReadings() {
+  const result = [];
+  Object.keys(CONTENT).sort().reverse().forEach(dateKey => {
+    const entry = CONTENT[dateKey];
+    if (entry.readings) {
+      entry.readings.forEach((r, idx) => {
+        result.push({ ...r, date: dateKey, idx });
+      });
+    }
+  });
+  return result;
+}
+
+function showTab(tab) {
+  document.querySelectorAll('.lp-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.lp-tab[data-tab="' + tab + '"]').classList.add('active');
+  const grid = document.getElementById('lp-grid');
+  const readings = document.getElementById('lp-readings');
+  if (tab === 'date') {
+    grid.style.display = '';
+    readings.style.display = 'none';
+  } else {
+    grid.style.display = 'none';
+    readings.style.display = 'block';
+    buildReadingsView(tab);
+  }
+}
+
+function buildReadingsView(groupBy) {
+  const all = getAllReadings();
+  const container = document.getElementById('lp-readings');
+  let groups = {};
+
+  if (groupBy === 'theme') {
+    all.forEach(r => {
+      r.themes.forEach(theme => {
+        if (!groups[theme]) groups[theme] = [];
+        groups[theme].push(r);
+      });
+    });
+    const sorted = {};
+    THEME_ORDER.forEach(t => { if (groups[t]) sorted[t] = groups[t]; });
+    groups = sorted;
+  } else if (groupBy === 'author') {
+    all.forEach(r => {
+      const key = r.author + '\x00' + r.dynasty;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(r);
+    });
+    const entries = Object.entries(groups).sort((a, b) => {
+      return dynastyRank(a[1][0].dynasty) - dynastyRank(b[1][0].dynasty);
+    });
+    groups = Object.fromEntries(entries);
+  }
+
+  container.innerHTML = Object.entries(groups).map(([label, items]) => {
+    const parts = label.split('\x00');
+    const display = groupBy === 'author' ? parts[0] + '（' + parts[1] + '）' : label;
+    return '<div class="lp-readings-group">' +
+      '<div class="lp-readings-group-label">' + display + '</div>' +
+      items.map(r =>
+        '<div class="lp-reading-item" onclick="openReadingModal(\'' + r.date + '\',' + r.idx + ')">' +
+        '<div class="lp-reading-left">' +
+        '<span class="lp-reading-title">' + r.title + '</span>' +
+        '<span class="lp-reading-author">' + r.dynasty + ' · ' + r.author + '</span>' +
+        '</div>' +
+        '<span class="lp-reading-date">' + fmtShort(r.date) + '</span>' +
+        '</div>'
+      ).join('') +
+      '</div>';
+  }).join('');
+}
+
+function openReadingModal(dateKey, idx) {
+  const r = CONTENT[dateKey].readings[idx];
+  document.getElementById('reading-modal-content').innerHTML =
+    '<div class="reading-modal-eyebrow">' + r.dynasty + '</div>' +
+    '<div class="reading-modal-title">' + r.title + '</div>' +
+    '<div class="reading-modal-author">' + r.author + '</div>' +
+    '<div class="reading-modal-tags">' + r.themes.map(t => '<span class="reading-modal-tag">' + t + '</span>').join('') + '</div>' +
+    '<div class="reading-modal-lines">' + r.lines + '</div>' +
+    (r.note ? '<div class="reading-modal-note">' + r.note + '</div>' : '');
+  const gotoBtn = document.getElementById('reading-modal-goto');
+  gotoBtn.textContent = '查看 ' + fmtShort(dateKey) + ' 课堂内容 →';
+  gotoBtn.onclick = () => { closeReadingModal(); showContent(dateKey); };
+  document.getElementById('reading-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeReadingModal() {
+  document.getElementById('reading-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeReadingModal(); });
 
 window.addEventListener('popstate', e => {
   e.state && e.state.date ? showContent(e.state.date) : showLanding();
